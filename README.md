@@ -2,18 +2,18 @@
 
 A Club Penguin private server built with Node.js, currently under active development.
 
-## Work in Progress
+## 🚧 Work in Progress
 
 This is an early development version - features and APIs may change frequently.
 
-## Current Features 
+## ⭐ Current Features 
 - Basic server infrastructure
 - Login/Register system
 - Room navigation
 - Adding items
 - Basic game and player interactions
 
-## Planned Features
+## 🔜 Planned Features
 - Mini games
 - Furniture system
 - Pet adoption (puffles)
@@ -21,9 +21,13 @@ This is an early development version - features and APIs may change frequently.
 - Chat filters
 - Custom commands
 
-## Built With
+## 🛠️ Built With
 - Node.js
 - Express
 - MySQL
 - XAMPP (Flexible)
 
+
+## 🚀 Questions?
+
+    sxrkou@gmail.com
