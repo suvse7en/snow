@@ -24,7 +24,6 @@ This is an early development version - features and APIs may change frequently.
 ## 🛠️ Built With
 - Node.js
 - Express
-- MySQL
 - XAMPP (Flexible)
 
 
