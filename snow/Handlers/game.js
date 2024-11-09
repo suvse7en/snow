@@ -121,6 +121,54 @@ class Game {
                 client.sendXtMessage('gi', [formattedItems]);
                 break;
             }
+            case "s#uph": {
+                const itemId = params[5];
+                client.updateClientItem("head", itemId);
+                client.room.sendXtMessage('uph', [client.data.id, itemId]);
+                break;
+            }
+            case "s#upf": {
+                const itemId = params[5];
+                client.updateClientItem("face", itemId);
+                client.room.sendXtMessage('upf', [client.data.id, itemId]);
+                break;
+            }
+            case "s#upn": {
+                const itemId = params[5];
+                client.updateClientItem("neck", itemId);
+                client.room.sendXtMessage('upn', [client.data.id, itemId]);
+                break;
+            }
+            case "s#upb": {
+                const itemId = params[5];
+                client.updateClientItem("body", itemId);
+                client.room.sendXtMessage('upb', [client.data.id, itemId]);
+                break;
+            }
+            case "s#upa": {
+                const itemId = params[5];
+                client.updateClientItem("hands", itemId);
+                client.room.sendXtMessage('upa', [client.data.id, itemId]);
+                break;
+            }
+            case "s#upe": {
+                const itemId = params[5];
+                client.updateClientItem("feet", itemId);
+                client.room.sendXtMessage('upe', [client.data.id, itemId]);
+                break;
+            }
+            case "s#upp": {
+                const itemId = params[5];
+                client.updateClientItem("pin", itemId);
+                client.room.sendXtMessage('upp', [client.data.id, itemId]);
+                break;
+            }
+            case "s#upl": {
+                const itemId = params[5];
+                client.updateClientItem("photo", itemId);
+                client.room.sendXtMessage('upl', [client.data.id, itemId]);
+                break;
+            }
         }
     }
 }
