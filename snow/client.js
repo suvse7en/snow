@@ -142,7 +142,10 @@ class Client {
     }
 
     updateClientItem(itemType, itemId) {
-        const escapedItemId = escape(itemId);
+
+        if(isNaN(itemId))
+            throw new Error(`Item id ${itemId} is not a number!`);
+
         const column = itemType;
         
         if (!column) {
@@ -151,11 +154,11 @@ class Client {
         }
 
         // Use setter to update the property
-        this[column] = escapedItemId;
-        this.data[column] = escapedItemId;
+        this[column] = itemId;
+        this.data[column] = itemId;
 
         const query = `UPDATE ps_users SET ${column} = ? WHERE id = ?`;
-        db.query(query, [escapedItemId, this.data.id]);
+        db.query(query, [itemId, this.data.id]);
     }
 }
 

@@ -23,7 +23,9 @@ class Room {
 
         client.sendXtMessage('jr', [this.id, ...playerStrings]);
         this.sendXtMessage('ap', [client.getPlayerString()]);
+        
     }
+
     removeClient(client) {
         if(!this.clients.includes(client))
             return;
