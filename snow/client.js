@@ -1,5 +1,5 @@
 const { escape } = require('mysql2');
-const crumbs = require('../crumbs');
+const crumbs = require('./data/crumbs');
 const db = require('./db');
 
 class Client {
@@ -20,6 +20,7 @@ class Client {
     #photo;
     #pin;
     #colour;
+    #buddies = [];
 
     constructor({data, socket}) {
         this.#data = data;
@@ -70,10 +71,6 @@ class Client {
     set photo(value) { this.#photo = value; }
     set pin(value) { this.#pin = value; }
     set colour(value) { this.#colour = value; }
-
-    getItems() {
-        return this.items;
-    }
 
     send(message) {
         this.socket.write(message + '\0');
@@ -152,13 +149,46 @@ class Client {
             this.sendXtMessage('e', [402]);
             return;
         }
-
         // Use setter to update the property
         this[column] = itemId;
         this.data[column] = itemId;
 
         const query = `UPDATE ps_users SET ${column} = ? WHERE id = ?`;
         db.query(query, [itemId, this.data.id]);
+    }
+
+    async getBuddyString() {
+        let buddyString = "";
+        
+        // If no buddies, return just %
+        if (!this.#buddies || this.#buddies.length === 0) {
+            return "%";
+        }
+    
+        // Process each buddy
+        for (const buddyId of this.#buddies) {
+            try {
+                // Using your returnArray function to get buddy info
+                const buddyInfo = await db.returnArray(
+                    'SELECT username FROM ps_users WHERE id = ?',
+                    [buddyId]
+                );
+    
+                if (buddyInfo && buddyInfo[0]) {
+                    const buddyName = buddyInfo[0].username;
+                    
+                    // Check if buddy is online
+                    const isOnline = isUserOnline(buddyId);
+                    
+                    // Format: buddyId|buddyName|isOnline
+                    buddyString += `${buddyId}|${buddyName}|${isOnline ? '1' : '0'}%`;
+                }
+            } catch (error) {
+                console.error(`Error getting buddy info for ID ${buddyId}:`, error);
+            }
+        }
+    
+        return buddyString || "%";
     }
 }
 

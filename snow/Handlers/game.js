@@ -1,15 +1,26 @@
 const db = require('../db'); 
-
 const Room = require('../room');
 const roomsInfo = require('../data/rooms');
-const Client = require('../client');
-const { param } = require('express/lib/request');
-class Game {
+const JoinPacket = require('./packets/JoinPacket');
+const UserPacket = require('./packets/UserPacket');
+const MessagePacket = require('./packets/MessagePacket');
+const InventoryPacket = require('./packets/InventoryPacket');
+const ClothingPacket = require('./packets/ClothingPacket');
+const BuddyPacket = require('./packets/BuddyPacket');
 
-    rooms = {};
-  
+
+class Game {
     constructor() {
+        this.rooms = {};
         this.setupRooms();
+        this.packetHandlers = {
+            'j': (params, client) => new JoinPacket(params, client, this.rooms), 
+            'u': (params, client) => new UserPacket(params, client),
+            'm': (params, client) => new MessagePacket(params, client),
+            'i': (params, client) => new InventoryPacket(params, client),
+            's': (params, client) => new ClothingPacket(params, client),
+            'b': (params, client) => new BuddyPacket(params, client)
+        };
     }
 
     setupRooms() {
@@ -22,168 +33,52 @@ class Game {
         }
     }
 
-    handleDisconnect(socket) {
-        const client = socket.client;
+    getTotalPlayers() {
+        const totalPlayers = [];
 
-        client.leaveRoom();
+        for(let roomId in this.rooms){
+            const room = this.rooms[roomId];
+            totalPlayers.push(room.getClients()); 
+        }
+        return totalPlayers;
+    }
+    
+    isUserOnline(playerId){
+        var playersArray = this.getTotalPlayers();
+
+        for(let playersInRoom in playersArray){
+
+            for(player in playersInRoom){
+                if(player == playerId){
+                    return true;
+                }
+            }
+    
+        }
+
+        return false;
+
+        
+    }
+    handleDisconnect(socket) {
+        socket.client.leaveRoom();
     }
 
     handleXTMessage(message, socket) {
-	
-	    const params = message.split("%");
+        const params = message.split("%");
+        const header = params[3];
+        const category = header.split('#')[0];
         
-	    const client = socket.client;
+        const createHandler = this.packetHandlers[category];  
 
-	    const header = params[3]; 
-        
-        switch(header) {
-            case "j#js": {
-                client.sendXtMessage('js', [1, 0, client.data.rank >= 3 ? 1 : 0]);
-                client.sendXtMessage('lp', [client.getPlayerString(), client.data.coins, 0, 1440, 1200000000000, 1, 4, 1, " ", 7]);
-                client.joinRoom(100, this.rooms);
-                break;
-            }
-            case "u#sp": {
-                const x = params[5];
-                const y = params[6];
-
-                client.x = x;
-                client.y = y;
-
-                client.room.sendXtMessage('sp', [client.data.id, x, y]);
-                break;
-            }
-            case "u#sf": {
-                const frame = params[5];
-
-                client.frame = frame;
-
-                client.room.sendXtMessage('sf', [client.data.id, frame]);
-                break;
-            }
-            case "u#sa": {
-                const frame = params[5];
-
-                client.room.sendXtMessage('sa', [client.data.id, frame])
-                break;
-            }
-            case "m#sm": {
-                const message = params[6];
-
-                client.room.sendXtMessage('sm', [client.data.id, message])
-                break;
-            }
-            case "u#h": {
-                client.sendXtMessage('h', [])
-                break;
-            }
-            case "u#sb": {
-                const x = params[5];
-                const y = params[6];
-
-                client.x = x;
-                client.y = y;
-
-                client.room.sendXtMessage('sb', [client.data.id, x, y]);
-                break;
-            }
-            case "u#se": {
-                const emote = params[5];
-                client.room.sendXtMessage('se', [client.data.id, emote]);
-                break;
-            }
-            case "u#ss": {
-                const message = params[5];
-                client.room.sendXtMessage('ss', [client.data.id, message]);
-                break;
-            }
-            case "j#jr": {
-                const roomId = params[5];
-                const x = params[6];
-                const y = params[7];
-
-                client.joinRoom(roomId, this.rooms, x, y);
-                break;
-            }
-            case "i#ai": {
-                const itemId = params[5];
-                
-                !isNaN(itemId) && client.addItem(itemId);
-                break;
-
-            }
-            case "i#gi": {
-                const items = client.getItems();
-                const formattedItems = Array.isArray(items) ? items.join("%") : "";
-
-                client.sendXtMessage('gi', [formattedItems]);
-                break;
-            }
-            case "s#uph": {
-                const itemId = Number(params[5]);
-
-                client.updateClientItem("head", itemId);
-                client.room.sendXtMessage('uph', [client.data.id, itemId]);
-                break;
-            }
-            case "s#upf": {
-                const itemId = Number(params[5]);
-                
-                client.updateClientItem("face", itemId);
-                client.room.sendXtMessage('upf', [client.data.id, itemId]);
-                break;
-            }
-            case "s#upn": {
-                const itemId = Number(params[5]);
-
-                client.updateClientItem("neck", itemId);
-                client.room.sendXtMessage('upn', [client.data.id, itemId]);
-                break;
-            }
-            case "s#upb": {
-                const itemId = Number(params[5]);
-
-                client.updateClientItem("body", itemId);
-                client.room.sendXtMessage('upb', [client.data.id, itemId]);
-                break;
-            }
-            case "s#upa": {
-                const itemId = Number(params[5]);
-
-                client.updateClientItem("hands", itemId);
-                client.room.sendXtMessage('upa', [client.data.id, itemId]);
-                break;
-            }
-            case "s#upe": {
-                const itemId = Number(params[5]);
-
-                client.updateClientItem("feet", itemId);
-                client.room.sendXtMessage('upe', [client.data.id, itemId]);
-                break;
-            }
-            case "s#upp": {
-                const itemId = Number(params[5]);
-
-                client.updateClientItem("photo", itemId);
-                client.room.sendXtMessage('upp', [client.data.id, itemId]);
-                break;
-            }
-            case "s#upl": {
-                const itemId = Number(params[5]);
-                client.updateClientItem("pin", itemId);
-                client.room.sendXtMessage('upl', [client.data.id, itemId]);
-                break;
-            }
-            case "u#pc": {
-                const itemId = Number(params[5]);
-
-                client.updateClientItem("colour", itemId);
-                client.room.sendXtMessage('upc', [client.data.id, itemId]);
-                break;
-            }
+        if (createHandler) {
+            const handler = createHandler(params, socket.client);
+            handler.handle();
+        } else {
+            console.log("This packet is not being handled yet: " + message);
+            console.log(this.getTotalPlayers());
         }
     }
 }
 
 module.exports = Game;
-
