@@ -1,61 +1,142 @@
-const Room = require('../room');
-const roomsInfo = require('../data/rooms');
+// managers/InventoryManager.js
+const db = require('../db');
+const crumbs = require('../data/crumbs');
 
-class GameManager {
-    #rooms = new Map();
-    #clients = new Map();
-
-    constructor() {
-        this.setupRooms();
+class InventoryManager {
+    constructor(client) {
+        this.client = client;
+        // Initialize items from client's data
+        this.items = new Set(
+            client.data.items ? 
+            client.data.items.split(',').map(Number) : 
+            []
+        );
     }
 
-    static getInstance() {
-        if (!GameManager.instance) {
-            GameManager.instance = new GameManager();
+    // Add an item to inventory
+    async addItem(itemId) {
+        itemId = Number(itemId);
+
+        if (!crumbs[itemId]) {
+            this.client.sendError(402); // Invalid item
+            return false;
         }
-        return GameManager.instance;
-    }
 
-    setupRooms() {
-        for(let [roomId, info] of Object.entries(roomsInfo)) {
-            this.#rooms.set(Number(roomId), new Room({
-                id: roomId,
-                name: info.name,
-                game: info.game
-            }));
+        if (this.items.has(itemId)) {
+            this.client.sendError(400); // Already has item
+            return false;
+        }
+
+        if (this.client.data.coins < crumbs[itemId].cost) {
+            this.client.sendError(401); // Not enough coins
+            return false;
+        }
+
+        try {
+            // Update coins
+            this.client.data.coins -= crumbs[itemId].cost;
+            
+            // Add item
+            this.items.add(itemId);
+            
+            // Update database
+            await db.query(
+                'UPDATE ps_users SET items = ?, coins = ? WHERE id = ?',
+                [Array.from(this.items).join(','), this.client.data.coins, this.client.data.id]
+            );
+
+            // Notify client
+            this.client.sendXtMessage('ai', [itemId, this.client.data.coins]);
+            return true;
+        } catch (error) {
+            console.error('Error adding item:', error);
+            this.client.sendError(500);
+            return false;
         }
     }
 
-    getRoom(roomId) {
-        return this.#rooms.get(Number(roomId));
+    // Check if client has an item
+    hasItem(itemId) {
+        return this.items.has(Number(itemId));
     }
 
-    addClient(client) {
-        this.#clients.set(client.data.id, client);
+    // Get all items
+    getItems() {
+        return Array.from(this.items);
     }
 
-    removeClient(clientId) {
-        this.#clients.delete(clientId);
+    // Update equipped item
+    async updateEquippedItem(itemType, itemId) {
+        itemId = Number(itemId);
+
+        if (isNaN(itemId)) {
+            throw new Error(`Item id ${itemId} is not a number!`);
+        }
+
+        // Validate item type
+        const validTypes = ['head', 'face', 'neck', 'body', 'hands', 'feet'];
+        if (!validTypes.includes(itemType)) {
+            this.client.sendError(402);
+            return false;
+        }
+
+        // Check if player owns item (except for default items)
+        if (itemId > 0 && !this.hasItem(itemId)) {
+            this.client.sendError(402);
+            return false;
+        }
+
+        try {
+            // Update database
+            await db.query(
+                `UPDATE ps_users SET ${itemType} = ? WHERE id = ?`,
+                [itemId, this.client.data.id]
+            );
+
+            // Update client data
+            this.client.data[itemType] = itemId;
+
+            // If in a room, update appearance
+            if (this.client.room) {
+                this.client.room.sendXtMessage('up', [
+                    this.client.data.id,
+                    itemType,
+                    itemId
+                ]);
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Error updating equipped item:', error);
+            this.client.sendError(500);
+            return false;
+        }
     }
 
-    getClient(clientId) {
-        return this.#clients.get(clientId);
-    }
+    // Remove an item (if needed)
+    async removeItem(itemId) {
+        itemId = Number(itemId);
 
-    getTotalPlayers() {
-        return Array.from(this.#clients.values());
-    }
+        if (!this.items.has(itemId)) {
+            return false;
+        }
 
-    isUserOnline(playerId) {
-        return this.#clients.has(Number(playerId));
-    }
+        try {
+            this.items.delete(itemId);
+            
+            await db.query(
+                'UPDATE ps_users SET items = ? WHERE id = ?',
+                [Array.from(this.items).join(','), this.client.data.id]
+            );
 
-    handleDisconnect(socket) {
-        if (socket.client) {
-            socket.client.leaveRoom();
-            this.removeClient(socket.client.data.id);
+            this.client.sendXtMessage('ri', [itemId]);
+            return true;
+        } catch (error) {
+            console.error('Error removing item:', error);
+            this.client.sendError(500);
+            return false;
         }
     }
 }
 
-module.exports = GameManager;
+module.exports = InventoryManager;

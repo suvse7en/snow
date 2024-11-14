@@ -13,8 +13,7 @@ class JoinPacket extends XTPacket {
         switch(packet) {
             case "j#js":
                 this.sendToClient('js', [1, 0, this.client.data.rank >= 3 ? 1 : 0]);
-                this.sendToClient('lp', [this.client.getPlayerString(), this.client.data.coins, 0, 1440, 1200000000000, 1, 4, 1, " ", 7
-                ]);
+                this.sendToClient('lp', [this.client.getPlayerString(), this.client.data.coins, 0, 1440, 1200000000000, 1, 4, 1, " ", 7]);
                 this.client.joinRoom(100, this.rooms);
                 break;
                 

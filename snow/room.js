@@ -1,56 +1,111 @@
 class Room {
-    id = 0; // number
-    name = ''; // string
-    clients = new Map(); // Changed to Map
-    game = false;
+    #id;
+    #name;
+    #clients;
+    #game;
 
     constructor({id, name, game = false}) {
-        this.id = Number(id);
-        this.name = name;
-        this.game = game;
+        this.#id = Number(id);
+        this.#name = name;
+        this.#game = game;
+        this.#clients = new Map();
     }
 
-    getClients() {
-        const clientsId = [];
-        this.clients.forEach((value, key) => clientsId.push(key));
+    // Getters
+    get id() { return this.#id; }
+    get name() { return this.#name; }
+    get game() { return this.#game; }
 
-        return clientsId;
+    getClients() {
+        return Array.from(this.#clients.keys());
+    }
+
+    getClientCount() {
+        return this.#clients.size;
+    }
+
+    hasClient(clientId) {
+        return this.#clients.has(Number(clientId));
     }
 
     addClient(client) {
-        // Check if client exists using Map has() method
-        if(this.clients.has(client.data.id))
-            return;
+        if (!client?.data?.id) {
+            console.error('Invalid client object provided to addClient');
+            return false;
+        }
 
-        const playerStrings = [];
-        // Use Map values() for iteration
-        this.clients.forEach(sclient => playerStrings.push(sclient.getPlayerString()));
+        const clientId = Number(client.data.id);
 
-        // Add client to Map using their ID as key
-        this.clients.set(client.data.id, client);
+        // Check if client already exists
+        if (this.#clients.has(clientId)) {
+            return false;
+        }
 
-        // Send join room message to new client
-        client.sendXtMessage('jr', [this.id, ...playerStrings]);
+        try {
+            // Get current player strings
+            const playerStrings = Array.from(this.#clients.values())
+                .map(client => client.getPlayerString());
 
-        // Announce new player to room
-        this.sendXtMessage('ap', [client.getPlayerString()]);
+            // Add client to room
+            this.#clients.set(clientId, client);
+
+            // Send join room message to new client
+            client.sendXtMessage('jr', [this.#id, ...playerStrings]);
+
+            // Announce new player to room
+            this.sendXtMessage('ap', [client.getPlayerString()]);
+
+            return true;
+        } catch (error) {
+            console.error('Error adding client to room:', error);
+            return false;
+        }
     }
 
     removeClient(client) {
-        // Check if client exists using Map has() method
-        if(!this.clients.has(client.data.id))
-            return;
+        if (!client?.data?.id) {
+            console.error('Invalid client object provided to removeClient');
+            return false;
+        }
 
-        // Remove client from Map
-        this.clients.delete(client.data.id);
+        const clientId = Number(client.data.id);
 
-        // Announce player removal to room
-        this.sendXtMessage('rp', [client.data.id]);
+        // Check if client exists
+        if (!this.#clients.has(clientId)) {
+            return false;
+        }
+
+        try {
+            // Remove client from room
+            this.#clients.delete(clientId);
+
+            // Announce player removal to room
+            this.sendXtMessage('rp', [clientId]);
+
+            return true;
+        } catch (error) {
+            console.error('Error removing client from room:', error);
+            return false;
+        }
     }
 
     sendXtMessage(header, params) {
-        // Use Map values() for iteration
-        this.clients.forEach(client => client.sendXtMessage(header, params));
+        try {
+            this.#clients.forEach(client => {
+                try {
+                    client.sendXtMessage(header, params);
+                } catch (error) {
+                    console.error(`Error sending message to client ${client.data?.id}:`, error);
+                }
+            });
+        } catch (error) {
+            console.error('Error broadcasting message:', error);
+        }
+    }
+
+    // Get a specific client
+    getClient(clientId) {
+        return this.#clients.get(Number(clientId));
     }
 }
 

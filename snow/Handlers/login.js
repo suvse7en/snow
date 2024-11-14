@@ -95,17 +95,26 @@ class Login {
                                     const loginSuccessResponse = `%xt%l%-1%${dbv.id}%${updateHash}%0%\0`;
                                     socket.write(loginSuccessResponse);
                                 } else {
-                                    const ip = socket.remoteAddress || 'unknown';
-                                    await db.returnArray(`UPDATE ${config.mysql.userTableName} SET ips=CONCAT(ips, '\\n${this.escape(ip)}') WHERE id='${dbv.id}'`);
-                                    
-                                    const client = new Client({
-                                        data: dbv,
-                                        socket: socket
-                                    });
-
-                                    socket.client = client;
-                                    
-                                    socket.write("%xt%l%-1%\0");
+                                    try {
+                                        console.log('Attempting game server login for:', dbv.username);
+                                        const ip = socket.remoteAddress || 'unknown';
+                                        await db.returnArray(`UPDATE ${config.mysql.userTableName} SET ips=CONCAT(ips, '\\n${this.escape(ip)}') WHERE id='${dbv.id}'`);
+                                        
+                                        console.log('Creating new client instance...');
+                                        const client = new Client({
+                                            data: dbv,
+                                            socket: socket
+                                        });
+                                
+                                        console.log('Attaching client to socket...');
+                                        socket.client = client;
+                                        
+                                        console.log('Client successfully created and attached for:', dbv.username);
+                                        socket.write("%xt%l%-1%\0");
+                                    } catch (err) {
+                                        console.error('Error during game server login:', err);
+                                        socket.write("%xt%e%-1%101%\0");
+                                    }
                                 }
                             } else {
                                 const response = "%xt%e%-1%601%24%\0";

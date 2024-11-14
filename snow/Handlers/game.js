@@ -1,3 +1,4 @@
+// Handlers/game.js
 const db = require('../db'); 
 const Room = require('../room');
 const roomsInfo = require('../data/rooms');
@@ -8,13 +9,16 @@ const InventoryPacket = require('./packets/InventoryPacket');
 const ClothingPacket = require('./packets/ClothingPacket');
 const BuddyPacket = require('./packets/BuddyPacket');
 
-
 class Game {
+    #rooms = new Map();
+    #clients = new Map();
+    #packetHandlers;  // Add this
+
     constructor() {
-        this.rooms = {};
-        this.setupRooms();
-        this.packetHandlers = {
-            'j': (params, client) => new JoinPacket(params, client, this.rooms), 
+        this.setUpRooms();
+        // Initialize packet handlers in constructor
+        this.#packetHandlers = {
+            'j': (params, client) => new JoinPacket(params, client, this.#rooms),
             'u': (params, client) => new UserPacket(params, client),
             'm': (params, client) => new MessagePacket(params, client),
             'i': (params, client) => new InventoryPacket(params, client),
@@ -22,61 +26,73 @@ class Game {
             'b': (params, client) => new BuddyPacket(params, client)
         };
     }
-
-    setupRooms() {
-        for(let roomId in roomsInfo) {
-            this.rooms[roomId] = new Room({
-                id: roomId,
-                name: roomsInfo[roomId].name,
-                game: roomsInfo[roomId].game
-            });
+    
+    static getInstance() {
+        if (!Game.instance) {
+            Game.instance = new Game();
         }
+        return Game.instance;
+    }
+
+    setUpRooms() {
+        for (let [roomId, info] of Object.entries(roomsInfo)) {
+            this.#rooms.set(Number(roomId), new Room({
+                id: roomId,
+                name: info.name,
+                game: info.game
+            }));
+        }
+    }
+
+    getRoom(roomId) {
+        return this.#rooms.get(Number(roomId));
+    }
+
+    addClient(client) {
+        this.#clients.set(client.data.id, client);
+    }
+
+    removeClient(clientId) {
+        this.#clients.delete(clientId);
+    }
+
+    getClient(clientId) {
+        return this.#clients.get(clientId);
     }
 
     getTotalPlayers() {
-        const totalPlayers = [];
-
-        for(let roomId in this.rooms){
-            const room = this.rooms[roomId];
-            totalPlayers.push(room.getClients()); 
-        }
-        return totalPlayers;
+        return Array.from(this.#clients.values());
     }
-    
-    isUserOnline(playerId){
-        var playersArray = this.getTotalPlayers();
 
-        for(let playersInRoom in playersArray){
-
-            for(player in playersInRoom){
-                if(player == playerId){
-                    return true;
-                }
-            }
-    
-        }
-
-        return false;
-
-        
+    isUserOnline(playerId) {
+        return this.#clients.has(Number(playerId));
     }
+
     handleDisconnect(socket) {
-        socket.client.leaveRoom();
+        if (socket.client) {
+            socket.client.leaveRoom();
+            this.removeClient(socket.client.data.id);
+        }
     }
 
     handleXTMessage(message, socket) {
-        const params = message.split("%");
-        const header = params[3];
-        const category = header.split('#')[0];
-        
-        const createHandler = this.packetHandlers[category];  
+        if (!socket.client) {
+            return;
+        }
 
-        if (createHandler) {
-            const handler = createHandler(params, socket.client);
-            handler.handle();
-        } else {
-            console.log("This packet is not being handled yet: " + message);
-            console.log(this.getTotalPlayers());
+        try {
+            const params = message.split("%");
+            const header = params[3];
+            const category = header.split('#')[0];
+            
+            const createHandler = this.#packetHandlers[category];
+            
+            if (createHandler) {
+                const handler = createHandler(params, socket.client);
+                handler.handle();
+            } 
+        } catch (error) {
+            console.error('Error handling XT message:', error);
         }
     }
 }

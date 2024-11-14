@@ -13,15 +13,23 @@ class ClothingPacket extends XTPacket {
         'upc': 'colour'
     };
 
-    handle() {
+    async handle() {
         const packet = this.params[3];
+        
         if (packet.startsWith('s#up')) {
-            const itemId = Number(this.params[5]);
-            const itemType = ClothingPacket.ITEM_TYPES[packet.slice(2)];
-            
-            if (itemType) {
-                this.client.updateClientItem(itemType, itemId);
-                this.sendToRoom(packet.slice(2), [this.client.data.id, itemId]);
+            try {
+                const itemId = Number(this.params[5]);
+                const itemType = ClothingPacket.ITEM_TYPES[packet.slice(2)];
+                
+                if (itemType) {
+                    await this.client.clothing.updateClientItem(itemType, itemId);
+                    this.sendToRoom(packet.slice(2), [this.client.data.id, itemId]);
+                } else {
+                    this.sendToClient('e', [402]);
+                }
+            } catch (error) {
+                console.error('Error updating clothing:', error);
+                this.sendToClient('e', [500]);
             }
         }
     }
