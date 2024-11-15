@@ -3,31 +3,35 @@ const XTPacket = require('./XTPacket');
 class UserPacket extends XTPacket {
     handle() {
         const packet = this.params[3];
+        let y;
+        let frame;
+        let x;
+        
         switch(packet) {
             case "u#sp":
-                var x = this.params[5];
-                var y = this.params[6];
+                x = this.params[5];
+                y = this.params[6];
                 this.client.x = x;
                 this.client.y = y;
                 this.sendToRoom(packet.slice(2), [this.client.data.id, x, y]);
                 break;
 
             case "u#sb":
-                var x = this.params[5];
-                var y = this.params[6];
+                x = this.params[5];
+                y = this.params[6];
                 this.client.x = x;
                 this.client.y = y;
                 this.sendToRoom(packet.slice(2), [this.client.data.id, x, y]);
                 break;
 
             case "u#sf":
-                var frame = this.params[5];
+                frame = this.params[5];
                 this.client.frame = frame;
                 this.sendToRoom(packet.slice(2), [this.client.data.id, frame]);
                 break;
 
             case "u#sa":
-                var frame = this.params[5];
+                frame = this.params[5];
                 this.client.frame = frame;
                 this.sendToRoom(packet.slice(2), [this.client.data.id, frame]);
                 break;

@@ -1,6 +1,4 @@
-// Handlers/game.js
-const db = require('../db'); 
-const Room = require('../room');
+const Room = require('./Room');
 const roomsInfo = require('../data/rooms');
 const JoinPacket = require('./packets/JoinPacket');
 const UserPacket = require('./packets/UserPacket');
@@ -12,9 +10,16 @@ const BuddyPacket = require('./packets/BuddyPacket');
 class Game {
     #rooms = new Map();
     #clients = new Map();
-    #packetHandlers;  // Add this
+    #packetHandlers;  
+    static instance = null;
 
     constructor() {
+
+        if (Game.instance) {
+            return Game.instance;
+        }
+        Game.instance = this;
+
         this.setUpRooms();
         // Initialize packet handlers in constructor
         this.#packetHandlers = {
@@ -25,13 +30,6 @@ class Game {
             's': (params, client) => new ClothingPacket(params, client),
             'b': (params, client) => new BuddyPacket(params, client)
         };
-    }
-    
-    static getInstance() {
-        if (!Game.instance) {
-            Game.instance = new Game();
-        }
-        return Game.instance;
     }
 
     setUpRooms() {

@@ -1,7 +1,7 @@
 const net = require('net');
 const config = require('./config');
-const Login = require('./Handlers/login'); // Import the Login class
-const Game = require('./Handlers/game'); // Import the Game class
+const Login = require('./handlers/login'); // Import the Login class
+const Game = require('./handlers/Game'); // Import the Game class
 
 class Server {
     constructor() {

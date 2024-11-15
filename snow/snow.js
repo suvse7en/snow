@@ -19,7 +19,7 @@ register.stderr.on('data', (data) => {
 });
 
 //Starts the game server
-const server = exec('node server.js');
+const server = exec('node Server.js');
 server.stdout.on('data', (data) => {
   console.log(`${data}`);
 });

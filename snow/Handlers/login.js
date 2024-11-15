@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const db = require('../db'); // Import the database functions
 const config = require('../config');
 const xml2js = require('xml2js');
-const Client = require('../client');
+const Client = require('./player/Client');
 
 class Login {
     handleXMLMessage(message, socket) {
@@ -32,7 +32,7 @@ class Login {
                     const username = loginNode?.nick?.[0];
                     const password = loginNode?.pword?.[0];
 
-                    this.doLogin(username, password, socket);
+                    await this.doLogin(username, password, socket);
 
                 } else {
                     console.log('Unknown action:', bodyAction);
@@ -155,7 +155,6 @@ class Login {
     }
     
     md5Reverse(password) {
-        // Implement the md5 reverse function or any specific transformation needed
         return crypto.createHash('md5').update(password).digest('hex');
     }
 }

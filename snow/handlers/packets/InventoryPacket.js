@@ -1,4 +1,3 @@
-// handlers/packets/InventoryPacket.js
 const XTPacket = require('./XTPacket');
 
 class InventoryPacket extends XTPacket {
@@ -7,20 +6,20 @@ class InventoryPacket extends XTPacket {
         
         switch(packet) {
             case 'i#gi':
-                const items = this.client.inventory.getItems();
+                const items = this.client.inventory.getInventoryArray();
                 const formattedItems = items.join('%');
                 this.client.sendXtMessage('gi', [formattedItems]);
                 break;
                 
             case 'i#ai':  // Add item
                 const itemId = Number(this.params[5]);
-                this.handleAddItem(itemId);
+                await this.handleAddItem(itemId);
                 break;
                 
             case 'i#uic': // Update item/clothing
                 const itemType = this.params[5];
                 const updateItemId = Number(this.params[6]);
-                this.handleUpdateItem(itemType, updateItemId);
+                await this.handleUpdateItem(itemType, updateItemId);
                 break;
                 
         }

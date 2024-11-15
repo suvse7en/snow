@@ -1,7 +1,7 @@
-const Inventory = require('./Handlers/inventory');
-const BuddyManager = require('./Handlers/buddy');
-const Clothing = require('./Handlers/clothing');
-const Game = require('./Handlers/game');
+const Inventory = require('./Inventory');
+const BuddyManager = require('./Buddy');
+const Clothing = require('./Clothing');
+const Game = require('../Game');
 
 class Client {
     #socket;
@@ -10,20 +10,23 @@ class Client {
     #x = 0;
     #y = 0;
     #frame = 1;
+    #gameInstance;
 
     constructor({data, socket}) {
         this.#socket = socket;
         this.#data = data;
         this.#currentRoom = null;
-
+        this.#gameInstance = new Game();
+        
         // Initialize managers
         this.inventory = new Inventory(this);
         this.buddyList = new BuddyManager(this);
         this.clothing = new Clothing(this);
 
-        // Register with Game
-        Game.getInstance().addClient(this);
+        this.#gameInstance.addClient(this);
     }
+
+
 
     // Getters
     get socket() { return this.#socket; }
@@ -51,8 +54,7 @@ class Client {
     }
 
     joinRoom(roomId, x = 0, y = 0) {
-        const gameManager = Game.getInstance();
-        const room = gameManager.getRoom(roomId);
+        const room = this.#gameInstance.getRoom(roomId);
         
         if(!room) return;
         
@@ -60,6 +62,7 @@ class Client {
         this.#currentRoom = room;
         this.x = x;
         this.y = y;
+        this.clothing.updateFromClientData(this.#data);
         room.addClient(this);
     }
 
@@ -75,7 +78,7 @@ class Client {
             this.#data.id,
             this.#data.username,
             1,
-            this.clothing.colour,  // Now using clothing manager
+            this.clothing.colour,
             this.clothing.head,
             this.clothing.face,
             this.clothing.neck,
@@ -96,7 +99,7 @@ class Client {
 
     disconnect() {
         this.leaveRoom();
-        Game.getInstance().removeClient(this.#data.id);
+        this.#gameInstance.removeClient(this.#data.id);
     }
 }
 
