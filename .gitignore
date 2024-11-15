@@ -1,3 +1,9 @@
+# macOS system files
+.DS_Store
+**/.DS_Store
+.AppleDouble
+.LSOverride
+
 # Logs
 logs
 *.log
@@ -129,5 +135,3 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-#extra
-.idea/
