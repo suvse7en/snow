@@ -17,7 +17,7 @@ This is an early development version - features and APIs may change frequently.
 ## 🔜 Planned Features
 
 - Mini games
-- Furniture system
+- Furniture/Igloo system
 - Pet adoption (puffles)
 - Moderation tools
 - Chat filters
