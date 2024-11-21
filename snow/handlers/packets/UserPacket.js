@@ -49,6 +49,11 @@ class UserPacket extends XTPacket {
             case "u#h":
                 this.sendToClient('h', []);
                 break;
+            case "u#sj":
+                const joke = this.params[5];
+                this.sendToRoom(packet.slice(2), [this.client.data.id, joke]);
+                break;
+
         }
     }
 }

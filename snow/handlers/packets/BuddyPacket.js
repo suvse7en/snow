@@ -1,11 +1,16 @@
 const XTPacket = require('./XTPacket');
 
 class BuddyPacket extends XTPacket {
-    handle() {
+    async handle() {
         const packet = this.params[3];
-        if (packet === "b#gb") {
-            this.sendToClient('gb', ["%"]);
+
+        switch(packet){
+            case "b#gb":
+                const buddyString = await this.client.buddyList.getBuddies(this.client);
+                this.sendToClient(packet.slice(2), [this.client.data.id, buddyString]);
+                break;
         }
+        
     }
 }
 
