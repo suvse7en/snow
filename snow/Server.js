@@ -1,12 +1,16 @@
 const net = require('net');
 const config = require('./config');
 const Login = require('./handlers/login'); // Import the Login class
-const Game = require('./handlers/Game'); // Import the Game class
+const Game = require('./handlers/game'); // Import the Game class
 
 class Server {
     constructor() {
         this.loginHandler = new Login();
         this.gameHandler = new Game();
+
+        this.loginHandler.gameHandler = this.gameHandler;
+        this.gameHandler.loginHandler = this.loginHandler;
+
         this.loginServer = net.createServer(this.handleLoginConnection.bind(this));
         this.gameServer = net.createServer(this.handleGameConnection.bind(this));
     }

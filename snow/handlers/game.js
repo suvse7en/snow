@@ -10,25 +10,20 @@ const BuddyPacket = require('./packets/BuddyPacket');
 class Game {
     #rooms = new Map();
     #clients = new Map();
-    #packetHandlers;  
-    static instance = null;
+    #packetHandlers; 
 
     constructor() {
-
-        if (Game.instance) {
-            return Game.instance;
-        }
-        Game.instance = this;
+        this.game = true;
 
         this.setUpRooms();
         // Initialize packet handlers in constructor
         this.#packetHandlers = {
-            'j': (params, client) => new JoinPacket(params, client, this.#rooms),
-            'u': (params, client) => new UserPacket(params, client),
-            'm': (params, client) => new MessagePacket(params, client),
-            'i': (params, client) => new InventoryPacket(params, client),
-            's': (params, client) => new ClothingPacket(params, client),
-            'b': (params, client) => new BuddyPacket(params, client)
+            'j': (params, client) => new JoinPacket(params, client, this, this.#rooms),
+            'u': (params, client) => new UserPacket(params, client, this),
+            'm': (params, client) => new MessagePacket(params, client, this),
+            'i': (params, client) => new InventoryPacket(params, client, this),
+            's': (params, client) => new ClothingPacket(params, client, this),
+            'b': (params, client) => new BuddyPacket(params, client, this)
         };
     }
 

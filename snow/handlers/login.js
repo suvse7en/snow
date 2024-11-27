@@ -63,7 +63,7 @@ class Login {
         socket.write(rndKResponse);
     }
 
-    async doLogin(username, password, socket) {
+    async doLogin(username, password, socket, onLoginComplete) {
         const key = socket.randomKey;
 
         try {
@@ -73,43 +73,41 @@ class Login {
             const results = await db.returnArray(query, [escapedUsername]);
 
             if (results.length > 0) {
-                const dbv = results[0];
+                const data = results[0];
                 let hash;
 
                 if (socket.serverType === "login") {
                     console.log('This is the key: ' + key)
-                    hash = this.encryptPassword(dbv.password.toUpperCase(), key);
+                    hash = this.encryptPassword(data.password.toUpperCase(), key);
                 } else {
-                    hash = this.swapMD5(crypto.createHash('md5').update(dbv.lkey + key).digest('hex')) + dbv.lkey;
+                    hash = this.swapMD5(crypto.createHash('md5').update(data.lkey + key).digest('hex')) + data.lkey;
                 }
 
                 if (password === hash) {
-                    if (dbv.active !== "0") {
-                        if (dbv.ubdate !== "PERMABANNED") {
-                            if (dbv.ubdate < Math.floor(Date.now() / 1000)) {
+                    if (data.active !== "0") {
+                        if (data.ubdate !== "PERMABANNED") {
+                            if (data.ubdate < Math.floor(Date.now() / 1000)) {
                                 if (socket.serverType === "login") {
                                     const loginResponse = `%xt%gs%-1%${config.servers.server1.ip}:${config.servers.server1.port}:2% 3;\0`;
                                     socket.write(loginResponse);
                                     const updateHash = this.md5Reverse(password);
-                                    await db.returnArray(`UPDATE ${config.mysql.userTableName} SET lkey='${updateHash}' WHERE id='${dbv.id}'`);
-                                    const loginSuccessResponse = `%xt%l%-1%${dbv.id}%${updateHash}%0%\0`;
+                                    await db.returnArray(`UPDATE ${config.mysql.userTableName} SET lkey='${updateHash}' WHERE id='${data.id}'`);
+                                    const loginSuccessResponse = `%xt%l%-1%${data.id}%${updateHash}%0%\0`;
                                     socket.write(loginSuccessResponse);
                                 } else {
                                     try {
-                                        console.log('Attempting game server login for:', dbv.username);
+                                        console.log('Attempting game server login for:', data.username);
                                         const ip = socket.remoteAddress || 'unknown';
-                                        await db.returnArray(`UPDATE ${config.mysql.userTableName} SET ips=CONCAT(ips, '\\n${this.escape(ip)}') WHERE id='${dbv.id}'`);
+                                        await db.returnArray(`UPDATE ${config.mysql.userTableName} SET ips=CONCAT(ips, '\\n${this.escape(ip)}') WHERE id='${data.id}'`);
                                         
                                         console.log('Creating new client instance...');
-                                        const client = new Client({
-                                            data: dbv,
-                                            socket: socket
-                                        });
-                                
+                                        
+                                        const client = new Client(data, socket, this.gameHandler);
+                                        
                                         console.log('Attaching client to socket...');
                                         socket.client = client;
                                         
-                                        console.log('Client successfully created and attached for:', dbv.username);
+                                        console.log('Client successfully created and attached for:', data.username);
                                         socket.write("%xt%l%-1%\0");
                                     } catch (err) {
                                         console.error('Error during game server login:', err);
@@ -160,4 +158,3 @@ class Login {
 }
 
 module.exports = Login;
-

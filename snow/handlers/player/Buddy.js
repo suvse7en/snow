@@ -1,4 +1,9 @@
+const db = require('../../db');
+
 class BuddyManager {
+    #buddyRequests = [];
+    #buddies = [];
+
     constructor(client) {
         this.client = client;
         this.buddies = new Set();
@@ -32,6 +37,28 @@ class BuddyManager {
 
         return buddyString || "%";
 
+    }
+
+    addRequest(client) {
+        if(this.#buddyRequests.includes(client.data.id))
+            return;
+
+        this.#buddyRequests.push(client.data.id);
+    }
+
+    getHasRequest(client) {
+        return this.#buddyRequests.includes(client.data.id);
+    }
+
+    addBuddy(client) {
+        if(this.#buddies.includes(client.data.id))
+            return;
+
+        this.#buddies.push(client.data.id);
+        this.client.data.buddies = this.#buddies.join(',');
+
+        db.query('UPDATE `ps_users` SET `buddies` = ? WHERE `id` = ?', [this.client.data.buddies, this.client.data.id]);
+        
     }
 
 }

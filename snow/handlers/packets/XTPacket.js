@@ -1,7 +1,8 @@
 class XTPacket {
-    constructor(params, client){
+    constructor(params, client, gameHandler){
         this.params = params;
         this.client = client;
+        this.gameHandler = gameHandler;
     }
 
     handle(){

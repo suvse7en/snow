@@ -3,8 +3,8 @@ const XTPacket = require('./XTPacket');
 
 class JoinPacket extends XTPacket {
 
-    constructor(params, client, rooms) {
-        super(params, client);
+    constructor(params, client, gameHandler, rooms) {
+        super(params, client, gameHandler);
         this.rooms = rooms;
     }
 

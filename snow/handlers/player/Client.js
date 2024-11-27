@@ -1,29 +1,34 @@
 const Inventory = require('./Inventory');
 const BuddyManager = require('./Buddy');
 const Clothing = require('./Clothing');
-const Game = require('../Game');
+const Game = require('../game');
+const db = require('../../db');
 
 class Client {
+    #gameInstance;
     #socket;
+    
     #data;
     #currentRoom;
+
     #x = 0;
     #y = 0;
     #frame = 1;
-    #gameInstance;
 
-    constructor({data, socket}) {
+    constructor(data, socket, handler) {
         this.#socket = socket;
         this.#data = data;
         this.#currentRoom = null;
-        this.#gameInstance = new Game();
         
         // Initialize managers
         this.inventory = new Inventory(this);
         this.buddyList = new BuddyManager(this);
         this.clothing = new Clothing(this);
 
-        this.#gameInstance.addClient(this);
+        if(handler.game) {
+            this.#gameInstance = handler;
+            this.#gameInstance.addClient(this);
+        }
     }
 
 
