@@ -24,7 +24,7 @@ class InventoryPacket extends XTPacket {
                 
         }
     }
-
+    
     async handleAddItem(itemId) {
         await this.client.inventory.addItem(itemId);
     }

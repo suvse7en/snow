@@ -1,6 +1,7 @@
 const XTPacket = require('./XTPacket');
 
 class BuddyPacket extends XTPacket {
+    
     async handle() {
         const packet = this.params[3];
 
@@ -19,17 +20,14 @@ class BuddyPacket extends XTPacket {
             }
             case "b#ba": {
                 const id = Number(this.params[5]);
-                const sclient = this.gameHandler.getClient(id);
-
-                if(!sclient)
-                    break;
-
-                if(!this.client.buddyList.getHasRequest(sclient))
-                    break;
-
-                this.client.buddyList.addBuddy(sclient);
-                sclient.buddyList.addBuddy(this.client);
-                break;
+                const targetClient = this.gameHandler.getClient(id);
+                this.client.buddyList.acceptBuddy(
+                    id,
+                    this.gameHandler.isUserOnline.bind(this.gameHandler),
+                    targetClient
+                );
+                break;  
+            
             }
             case "b#gb":
                 const buddyString = await this.client.buddyList.getBuddies(this.client);
