@@ -1,5 +1,5 @@
 const Inventory = require('./Inventory');
-const BuddyManager = require('./Buddy');
+const BuddyManager = require('./BuddyManager');
 const Clothing = require('./Clothing');
 const Game = require('../game');
 const db = require('../../db');
@@ -19,19 +19,16 @@ class Client {
         this.#socket = socket;
         this.#data = data;
         this.#currentRoom = null;
-        
-        // Initialize managers
-        this.inventory = new Inventory(this);
-        this.buddyList = new BuddyManager(this);
-        this.clothing = new Clothing(this);
 
         if(handler.game) {
             this.#gameInstance = handler;
-            this.#gameInstance.addClient(this);
         }
+
+        // Initialize managers
+        this.inventory = new Inventory(this);
+        this.buddyList = new BuddyManager(this, this.#gameInstance);
+        this.clothing = new Clothing(this);
     }
-
-
 
     // Getters
     get socket() { return this.#socket; }

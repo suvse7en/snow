@@ -1,11 +1,14 @@
-
 const crypto = require('crypto');
-const db = require('../db'); // Import the database functions
-const config = require('../config');
+const db = require('../db');
+const config = require('../Config');
 const xml2js = require('xml2js');
-const Client = require('./player/Client');
 
 class Login {
+    constructor({ onLoginSuccess }) {
+        // Store the callback passed from Server
+        this.onLoginSuccess = onLoginSuccess;
+    }
+
     handleXMLMessage(message, socket) {
         xml2js.parseString(message, async (err, result) => {
             if (err) {
@@ -22,18 +25,15 @@ class Login {
 
                 if (bodyAction === 'verChk') {
                     await this.handleVersionCheck(socket);
-
                 } else if (bodyAction === 'rndK') {
-                    socket.randomKey = crypto.randomBytes(16).toString('hex'); // Generate a unique 16-byte key
+                    socket.randomKey = crypto.randomBytes(16).toString('hex');
                     await this.handleRandomKey(socket);
-
                 } else if (bodyAction === 'login') {
                     const loginNode = result.msg?.body?.[0]?.login?.[0];
                     const username = loginNode?.nick?.[0];
                     const password = loginNode?.pword?.[0];
 
                     await this.doLogin(username, password, socket);
-
                 } else {
                     console.log('Unknown action:', bodyAction);
                 }
@@ -43,31 +43,27 @@ class Login {
         });
     }
 
-    // Function to handle the policy file request
     handlePolicyRequest(socket) {
         const policyResponse = '<?xml version="1.0"?>\n<!DOCTYPE cross-domain-policy SYSTEM "http://www.macromedia.com/xml/dtds/cross-domain-policy.dtd">\n<cross-domain-policy>\n  <allow-access-from domain="*" to-ports="*"/>\n</cross-domain-policy>\0';
         socket.write(policyResponse);
     }
 
-    // Function to handle version check
     async handleVersionCheck(socket) {
         const versionResponse = `<msg t='sys'><body action='apiOK' r='0'></body></msg>\0`;
         console.log('Sending version response');
         socket.write(versionResponse);
     }
 
-    // Function to handle random key generation
     async handleRandomKey(socket) {
         const rndKResponse = `<msg t='sys'><body action='rndK' r='0'><k>${socket.randomKey}</k></body></msg>\0`;
         console.log('Sending random key response');
         socket.write(rndKResponse);
     }
 
-    async doLogin(username, password, socket, onLoginComplete) {
+    async doLogin(username, password, socket) {
         const key = socket.randomKey;
 
         try {
-            // Escape the username to prevent SQL injection
             const escapedUsername = this.escape(username);
             const query = `SELECT * FROM ${config.mysql.userTableName} WHERE username = ?`;
             const results = await db.returnArray(query, [escapedUsername]);
@@ -77,7 +73,7 @@ class Login {
                 let hash;
 
                 if (socket.serverType === "login") {
-                    console.log('This is the key: ' + key)
+                    console.log('This is the key: ' + key);
                     hash = this.encryptPassword(data.password.toUpperCase(), key);
                 } else {
                     hash = this.swapMD5(crypto.createHash('md5').update(data.lkey + key).digest('hex')) + data.lkey;
@@ -88,47 +84,29 @@ class Login {
                         if (data.ubdate !== "PERMABANNED") {
                             if (data.ubdate < Math.floor(Date.now() / 1000)) {
                                 if (socket.serverType === "login") {
-                                    const loginResponse = `%xt%gs%-1%${config.servers.server1.ip}:${config.servers.server1.port}:2% 3;\0`;
-                                    socket.write(loginResponse);
+                                    // Update the login key in database
                                     const updateHash = this.md5Reverse(password);
                                     await db.returnArray(`UPDATE ${config.mysql.userTableName} SET lkey='${updateHash}' WHERE id='${data.id}'`);
-                                    const loginSuccessResponse = `%xt%l%-1%${data.id}%${updateHash}%0%\0`;
-                                    socket.write(loginSuccessResponse);
+                                    
+                                    // Call the callback with the player data
+                                    this.onLoginSuccess(data, socket, {updateHash});
                                 } else {
-                                    try {
-                                        console.log('Attempting game server login for:', data.username);
-                                        const ip = socket.remoteAddress || 'unknown';
-                                        await db.returnArray(`UPDATE ${config.mysql.userTableName} SET ips=CONCAT(ips, '\\n${this.escape(ip)}') WHERE id='${data.id}'`);
-                                        
-                                        console.log('Creating new client instance...');
-                                        
-                                        const client = new Client(data, socket, this.gameHandler);
-                                        
-                                        console.log('Attaching client to socket...');
-                                        socket.client = client;
-                                        
-                                        console.log('Client successfully created and attached for:', data.username);
-                                        socket.write("%xt%l%-1%\0");
-                                    } catch (err) {
-                                        console.error('Error during game server login:', err);
-                                        socket.write("%xt%e%-1%101%\0");
-                                    }
+                                    // Handle game server login
+                                    const ip = socket.remoteAddress || 'unknown';
+                                    await db.returnArray(`UPDATE ${config.mysql.userTableName} SET ips=CONCAT(ips, '\\n${this.escape(ip)}') WHERE id='${data.id}'`);
+                                    this.onLoginSuccess(data, socket);
                                 }
                             } else {
-                                const response = "%xt%e%-1%601%24%\0";
-                                socket.write(response);
+                                socket.write("%xt%e%-1%601%24%\0");
                             }
                         } else {
-                            const response = "%xt%e%-1%603%\0";
-                            socket.write(response);
+                            socket.write("%xt%e%-1%603%\0");
                         }
                     } else {
-                        const response = "%xt%e%-1%900%\0";
-                        socket.write(response);
+                        socket.write("%xt%e%-1%900%\0");
                     }
                 } else {
-                    const response = "%xt%e%-1%101%\0";
-                    socket.write(response);
+                    socket.write("%xt%e%-1%101%\0");
                 }
             }
         } catch (err) {
@@ -136,6 +114,7 @@ class Login {
         }
     }
 
+    // Your utility methods remain the same
     encryptPassword(password, key) {
         return this.swapMD5(crypto.createHash('md5').update(this.swapMD5(password) + key + 'Y(02.>\'H}t":E1').digest('hex'));
     }

@@ -23,7 +23,7 @@ class Game {
             'm': (params, client) => new MessagePacket(params, client, this),
             'i': (params, client) => new InventoryPacket(params, client, this),
             's': (params, client) => new ClothingPacket(params, client, this),
-            'b': (params, client) => new BuddyPacket(params, client, this)
+            'b': (params, client) => new BuddyPacket(params, client, this, this.#clients)
         };
     }
 
@@ -72,7 +72,6 @@ class Game {
         if (!socket.client) {
             return;
         }
-
         try {
             const params = message.split("%");
             const header = params[3];
