@@ -1,15 +1,15 @@
 const net = require('net');
-const config = require('./config');
+const config = require('./Config');
 const Login = require('./handlers/login'); // Import the Login class
 const Game = require('./handlers/game'); // Import the Game class
+const Client = require('./handlers/player/Client');
 
 class Server {
     constructor() {
-        this.loginHandler = new Login();
         this.gameHandler = new Game();
-
-        this.loginHandler.gameHandler = this.gameHandler;
-        this.gameHandler.loginHandler = this.loginHandler;
+        this.loginHandler = new Login({
+            onLoginSuccess: (data, socket, loginData) => this.handleLoginSuccess(data, socket, loginData)
+        });
 
         this.loginServer = net.createServer(this.handleLoginConnection.bind(this));
         this.gameServer = net.createServer(this.handleGameConnection.bind(this));
@@ -25,6 +25,45 @@ class Server {
         this.gameServer.listen(config.servers.server1.port, config.servers.server1.ip, () => {
             console.log(`Game Server listening on ${config.servers.server1.ip}:${config.servers.server1.port}`);
         });
+    }
+
+    handleLoginSuccess(data, socket, loginData = {}) {
+        try {
+            if (socket.serverType === "login") {
+                // First login (login server)
+                console.log('Sending login server response...');
+                
+                // Send server info and login key
+                const loginResponse = `%xt%gs%-1%${config.servers.server1.ip}:${config.servers.server1.port}:2% 3;\0`;
+                socket.write(loginResponse);
+                
+                const loginSuccessResponse = `%xt%l%-1%${data.id}%${loginData.updateHash}%0%\0`;
+                socket.write(loginSuccessResponse);
+            } else {
+                // Game server login
+                
+                console.log('Creating new client instance...');
+                const client = new Client(data, socket, this.gameHandler);
+                
+                console.log('Adding client to game...');
+                
+                if(!this.gameHandler.isUserOnline(client.data.id)){
+                    this.gameHandler.addClient(client);
+                }else{
+                    socket.write("%xt%e%-1%3%\0");
+                }
+                
+                
+                console.log('Attaching client to socket...');
+                socket.client = client;
+                
+                // Send game server login success
+                socket.write("%xt%l%-1%\0");
+            }
+        } catch (err) {
+            console.error('Error during login success:', err);
+            socket.write("%xt%e%-1%101%\0");
+        }
     }
 
     async handleData(data, socket, handler) {
