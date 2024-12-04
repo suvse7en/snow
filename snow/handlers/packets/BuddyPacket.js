@@ -29,10 +29,28 @@ class BuddyPacket extends XTPacket {
                 break;  
             
             }
+
             case "b#gb":
                 const buddyString = await this.client.buddyList.getBuddies(this.client);
                 this.client.sendXtMessage(packet.slice(2), [this.client.data.id, buddyString]);
                 break;
+
+            case "b#rb": {
+                const id = Number(this.params[5]);
+                this.client.buddyList.removeBuddy(
+                    id, 
+                    this.gameHandler.getClient(id)
+                );
+                break;
+            }
+                
+            case "b#bf": {
+                const id = Number(this.params[5]);
+                const targetClient = this.gameHandler.getClient(id);
+                this.client.buddyList.findBuddy(id, targetClient, this.gameHandler.isUserOnline.bind(this.gameHandler));
+                break;
+            }
+                
         }
         
     }

@@ -25,6 +25,18 @@ class JoinPacket extends XTPacket {
                 const y = this.params[7];
                 this.client.joinRoom(roomId, x, y);
                 break;
+            case "j#jp": {
+                const roomId = parseInt(this.params[5]);
+                const x = 330; // Default x position
+                const y = 300; // Default y position
+                
+                // First send the join port confirmation
+                this.sendToClient('jp', [this.params[4], roomId]);
+                console.log(this.params);
+                // Then make them join the room
+                this.client.joinRoom(roomId, x, y);
+                break;
+            }
         }
     }
 }

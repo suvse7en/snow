@@ -56,8 +56,13 @@ class Client {
     }
 
     joinRoom(roomId, x = 0, y = 0) {
-        const room = this.#gameInstance.getRoom(roomId);
+
+        //if(roomId == this.data.id + 1000){
+            //this.#gameInstance.createRoom(roomId);
+        //}
         
+        const room = this.#gameInstance.getRoom(roomId);
+    
         if(!room) return;
         
         this.leaveRoom();
@@ -73,6 +78,10 @@ class Client {
             this.#currentRoom.removeClient(this);
             this.#currentRoom = null;
         }
+    }
+
+    setRoom(roomId){
+        this.#currentRoom = roomId;
     }
 
     getPlayerString() {

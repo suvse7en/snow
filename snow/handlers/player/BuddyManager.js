@@ -1,4 +1,5 @@
 const db = require('../../db');
+const JoinPacket = require('../packets/JoinPacket');
 
 class BuddyManager {
     #buddyRequests = [];
@@ -7,10 +8,12 @@ class BuddyManager {
 
     constructor(client, gameHandler) {
         this.client = client;
-        this.buddies = new Set();
         this.#gameInstance = gameHandler;
-        // Add debug log
-        console.log("Game handler in BuddyManager:", gameHandler);
+
+        if (client.data.buddies) {
+            this.#buddies = client.data.buddies.split(',').filter(id => id !== '');
+        }
+        
     }
 
     async getBuddies(client) {
@@ -34,12 +37,13 @@ class BuddyManager {
                     
                     // Format: buddyId|buddyName|isOnline
                     buddyString += `${buddyId}|${buddyName}|${isOnline ? '1' : '0'}%`;
+                    console.log(buddyString);         
                 }
             } catch (error) {
                 console.error(`Error getting buddy info for ID ${buddyId}:`, error);
             }
         }
-
+        console.log(buddyString);
         return buddyString || "%";
     }
 
@@ -71,7 +75,10 @@ class BuddyManager {
         }
         
         // Add to both players' buddy lists with comma at the end
-        this.#buddies.push(sClientId);
+        if (!this.#buddies.includes(sClientId)) {  // Prevent duplicate buddies
+            this.#buddies.push(sClientId);
+        }
+
         this.client.data.buddies = this.#buddies.join(',') + ',';
         
         // Remove the buddy request
@@ -83,14 +90,49 @@ class BuddyManager {
             
         // Update the target client if they're online
         if (targetClient) {
-            targetClient.buddyList.#buddies.push(this.client.data.id);
+            if (!targetClient.buddyList.#buddies.includes(this.client.data.id)) {
+                targetClient.buddyList.#buddies.push(this.client.data.id);
+            }
             targetClient.data.buddies = targetClient.buddyList.#buddies.join(',') + ',';
-            
-            await db.query('UPDATE `ps_users` SET `buddies` = ? WHERE `id` = ?', 
+
+            await db.query('UPDATE `ps_users` SET `buddies` = ? WHERE `id` = ?',
                 [targetClient.data.buddies, targetClient.data.id]);
-                
+
             // Send notification packet to the other player
             targetClient.sendXtMessage('ba', [this.client.data.id, this.client.data.username]);
+        }
+    }
+
+    async removeBuddy(targetId, targetClient) {
+        const targetIdNum = Number(targetId);
+        this.#buddies = this.#buddies.map(Number).filter(id => id !== targetIdNum);
+
+        this.#buddies = this.#buddies.filter(id => id !== targetId);
+        this.client.data.buddies = this.#buddies.length > 0 ? this.#buddies.join(',') : '';
+    
+        console.log('After filter - buddies:', this.#buddies);
+
+        // Update database for current user
+        await db.query('UPDATE `ps_users` SET `buddies` = ? WHERE `id` = ?', 
+            [this.client.data.buddies, this.client.data.id]);
+    
+        // If target client exists, update their buddy list too
+        if (targetClient) {
+            targetClient.buddyList.#buddies = targetClient.buddyList.#buddies.filter(id => id !== this.client.data.id);
+            targetClient.data.buddies = targetClient.buddyList.#buddies.join(',') + ',';
+    
+            // Update database for target user
+            await db.query('UPDATE `ps_users` SET `buddies` = ? WHERE `id` = ?', 
+                [targetClient.data.buddies, targetClient.data.id]);
+    
+            // Send notification packet to target user
+            targetClient.sendXtMessage('rb', [this.client.data.id, this.client.data.username]);
+        }
+    }
+
+    findBuddy(targetId, targetClient, isUserOnline){
+        if(isUserOnline(targetId)){
+            this.client.sendXtMessage('bf', [targetClient.room])
         }
     }
 

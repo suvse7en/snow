@@ -1,6 +1,6 @@
 # Snow [Work in Progress]
 
-A Club Penguin private server built with Node.js.
+An AS2 Club Penguin private server built with Node.js.
 
 ## 🚧 Work in Progress
 

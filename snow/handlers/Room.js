@@ -107,6 +107,7 @@ class Room {
     getClient(clientId) {
         return this.#clients.get(Number(clientId));
     }
+
 }
 
 module.exports = Room;

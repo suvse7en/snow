@@ -6,6 +6,9 @@ const MessagePacket = require('./packets/MessagePacket');
 const InventoryPacket = require('./packets/InventoryPacket');
 const ClothingPacket = require('./packets/ClothingPacket');
 const BuddyPacket = require('./packets/BuddyPacket');
+const IglooPacket = require('./packets/IglooPacket');
+const PufflePacket = require('./packets/PufflePacket');
+const EpfPacket = require('./packets/EpfPacket');
 
 class Game {
     #rooms = new Map();
@@ -23,7 +26,10 @@ class Game {
             'm': (params, client) => new MessagePacket(params, client, this),
             'i': (params, client) => new InventoryPacket(params, client, this),
             's': (params, client) => new ClothingPacket(params, client, this),
-            'b': (params, client) => new BuddyPacket(params, client, this, this.#clients)
+            'b': (params, client) => new BuddyPacket(params, client, this, this.#clients),
+            'g': (params, client) => new IglooPacket(params, client, this),
+            'p': (params, client) => new PufflePacket(params, client, this),
+            'f': (params, client) => new EpfPacket(params, client, this)
         };
     }
 
@@ -86,6 +92,14 @@ class Game {
         } catch (error) {
             console.error('Error handling XT message:', error);
         }
+    }
+
+    createRoom(id) {
+        this.#rooms.set(Number(id), new Room({
+            id: id,
+            name: "igloo:" + id,
+            game: false
+        }));
     }
 }
 
