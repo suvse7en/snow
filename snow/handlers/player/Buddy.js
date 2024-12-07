@@ -1,7 +1,6 @@
 const db = require('../../db');
-const JoinPacket = require('../packets/JoinPacket');
 
-class BuddyManager {
+class Buddy {
     #buddyRequests = [];
     #buddies = [];
     #gameInstance;
@@ -37,13 +36,11 @@ class BuddyManager {
                     
                     // Format: buddyId|buddyName|isOnline
                     buddyString += `${buddyId}|${buddyName}|${isOnline ? '1' : '0'}%`;
-                    console.log(buddyString);         
                 }
             } catch (error) {
                 console.error(`Error getting buddy info for ID ${buddyId}:`, error);
             }
         }
-        console.log(buddyString);
         return buddyString || "%";
     }
 
@@ -59,8 +56,7 @@ class BuddyManager {
         return this.#buddyRequests.includes(client.data.id);
     }
 
-    
-    
+
     async acceptBuddy(sClientId, isUserOnline, targetClient) {
 
         if (!isUserOnline(sClientId)) {
@@ -137,4 +133,4 @@ class BuddyManager {
     }
 
 }
-module.exports = BuddyManager;
+module.exports = Buddy;

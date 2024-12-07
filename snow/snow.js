@@ -1,5 +1,25 @@
 const { exec } = require('child_process');
 
+const snowBanner = `
+  ❄️  ❆  ❅  ❄️  ❆  ❅  ❄️  ❆  ❅  ❄️  ❆  ❅  ❄️  
+
+  ███████╗███╗   ██╗ ██████╗ ██╗    ██╗
+  ██╔════╝████╗  ██║██╔═══██╗██║    ██║
+  ███████╗██╔██╗ ██║██║   ██║██║ █╗ ██║
+  ╚════██║██║╚██╗██║██║   ██║██║███╗██║
+  ███████║██║ ╚████║╚██████╔╝╚███╔███╔╝
+  ╚══════╝╚═╝  ╚═══╝ ╚═════╝  ╚══╝╚══╝
+
+  ❄️  ❆  ❅  ❄️  ❆  ❅  ❄️  ❆  ❅  ❄️  ❆  ❅  ❄️
+`;
+
+// Function to display the banner
+const displayBanner = () => {
+    console.log('\x1b[36m%s\x1b[0m', snowBanner); // Cyan color
+};
+
+displayBanner();
+
 // Starts the database
 const database = exec('node db.js');
 database.stdout.on('data', (data) => {
@@ -10,9 +30,9 @@ database.stderr.on('data', (data) => {
 });
 
 // Start register.js
-const register = exec('node register.js');
+const register = exec('node Register.js');
 register.stdout.on('data', (data) => {
-  console.log(`Register Output: ${data}`);
+  console.log(`${data}`);
 });
 register.stderr.on('data', (data) => {
   console.error(`Register Error: ${data}`);
@@ -26,4 +46,5 @@ server.stdout.on('data', (data) => {
 server.stderr.on('data', (data) => {
   console.error(`Server Error: ${data}`);
 });
+
 

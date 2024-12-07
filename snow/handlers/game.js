@@ -13,6 +13,7 @@ const EpfPacket = require('./packets/EpfPacket');
 class Game {
     #rooms = new Map();
     #clients = new Map();
+    #clientsByName = [];
     #packetHandlers; 
 
     constructor() {
@@ -43,12 +44,18 @@ class Game {
         }
     }
 
+    addPlayerByName(name){
+        this.#clientsByName.push(name);
+    }
+
     getRoom(roomId) {
         return this.#rooms.get(Number(roomId));
     }
 
     addClient(client) {
         this.#clients.set(client.data.id, client);
+        this.#clientsByName.push(client.data.name);
+        console.log(this.#clientsByName);
     }
 
     removeClient(clientId) {

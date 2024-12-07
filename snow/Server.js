@@ -30,9 +30,6 @@ class Server {
     handleLoginSuccess(data, socket, loginData = {}) {
         try {
             if (socket.serverType === "login") {
-                // First login (login server)
-                console.log('Sending login server response...');
-                
                 // Send server info and login key
                 const loginResponse = `%xt%gs%-1%${config.servers.server1.ip}:${config.servers.server1.port}:2% 3;\0`;
                 socket.write(loginResponse);
@@ -48,6 +45,7 @@ class Server {
                 console.log('Adding client to game...');
                 
                 if(!this.gameHandler.isUserOnline(client.data.id)){
+                    this.gameHandler.addPlayerByName(client.data.username);
                     this.gameHandler.addClient(client);
                 }else{
                     socket.write("%xt%e%-1%3%\0");
@@ -128,10 +126,6 @@ class Server {
 
             this.gameHandler.handleDisconnect(socket);
         });
-    }
-
-    escape(string) {
-        return string.replace(/'/g, "\\'").replace(/"/g, '\\"');
     }
 }
 

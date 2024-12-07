@@ -26,14 +26,25 @@ class JoinPacket extends XTPacket {
                 this.client.joinRoom(roomId, x, y);
                 break;
             case "j#jp": {
-                const roomId = parseInt(this.params[5]);
+                const playerId = parseInt(this.params[4]);
+                const roomId = playerId + 1000; // External ID calculation
+                const roomType = this.params[5] || 0; // Adding roomType parameter
                 const x = 330; // Default x position
                 const y = 300; // Default y position
                 
-                // First send the join port confirmation
-                this.sendToClient('jp', [this.params[4], roomId]);
-                console.log(this.params);
-                // Then make them join the room
+                // Create the room if it doesn't exist
+                if (!this.rooms.get(roomId)) {
+                    this.rooms.set(roomId, new Room({
+                        id: roomId,
+                        name: `igloo:${playerId}`,
+                        game: false
+                    }));
+                }
+                
+                // Send join confirmation matching PHP packet structure
+                this.sendToClient('jp', [playerId, playerId, roomId, roomType]);
+                
+                // Make them join the room
                 this.client.joinRoom(roomId, x, y);
                 break;
             }

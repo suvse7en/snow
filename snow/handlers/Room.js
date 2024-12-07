@@ -54,7 +54,7 @@ class Room {
 
             // Announce new player to room
             this.sendXtMessage('ap', [client.getPlayerString()]);
-
+            
             return true;
         } catch (error) {
             console.error('Error adding client to room:', error);

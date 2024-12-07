@@ -15,13 +15,10 @@ class Login {
                 console.error('XML Parsing Error:', err);
                 return;
             }
-            console.log('Parsed XML:', result);
-
             const msgType = result.msg?.['$']?.t;
 
             if (msgType === 'sys') {
                 const bodyAction = result.msg?.body?.[0]?.['$']?.action;
-                console.log(bodyAction);
 
                 if (bodyAction === 'verChk') {
                     await this.handleVersionCheck(socket);
@@ -50,13 +47,11 @@ class Login {
 
     async handleVersionCheck(socket) {
         const versionResponse = `<msg t='sys'><body action='apiOK' r='0'></body></msg>\0`;
-        console.log('Sending version response');
         socket.write(versionResponse);
     }
 
     async handleRandomKey(socket) {
         const rndKResponse = `<msg t='sys'><body action='rndK' r='0'><k>${socket.randomKey}</k></body></msg>\0`;
-        console.log('Sending random key response');
         socket.write(rndKResponse);
     }
 
@@ -73,7 +68,6 @@ class Login {
                 let hash;
 
                 if (socket.serverType === "login") {
-                    console.log('This is the key: ' + key);
                     hash = this.encryptPassword(data.password.toUpperCase(), key);
                 } else {
                     hash = this.swapMD5(crypto.createHash('md5').update(data.lkey + key).digest('hex')) + data.lkey;

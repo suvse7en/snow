@@ -1,8 +1,7 @@
 const Inventory = require('./Inventory');
-const BuddyManager = require('./BuddyManager');
+const Buddy = require('./Buddy');
 const Clothing = require('./Clothing');
-const Game = require('../game');
-const db = require('../../db');
+
 
 class Client {
     #gameInstance;
@@ -26,7 +25,7 @@ class Client {
 
         // Initialize managers
         this.inventory = new Inventory(this);
-        this.buddyList = new BuddyManager(this, this.#gameInstance);
+        this.buddyList = new Buddy(this, this.#gameInstance);
         this.clothing = new Clothing(this);
     }
 
