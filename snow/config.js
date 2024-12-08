@@ -8,12 +8,12 @@ const config = {
     },
     servers: {
         login: {
-            ip: '127.0.0.1',
+            ip: '0.0.0.0',
             port: '6112',
             name: 'Login Server'
         },
         server1: {
-            ip: '127.0.0.1',
+            ip: '0.0.0.0',
             port: '6113',
             name: 'Elite Land'
         }
