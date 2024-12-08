@@ -1,5 +1,5 @@
 const net = require('net');
-const config = require('./Config');
+const config = require('./config');
 const Login = require('./handlers/login'); // Import the Login class
 const Game = require('./handlers/game'); // Import the Game class
 const Client = require('./handlers/player/Client');
