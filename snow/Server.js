@@ -17,13 +17,13 @@ class Server {
 
     start() {
         // Start the login server
-        this.loginServer.listen(config.servers.login.port, config.servers.login.ip, () => {
-            console.log(`Login Server listening on ${config.servers.login.ip}:${config.servers.login.port}`);
+        this.loginServer.listen(config.servers.login.port, config.servers.login.bind_ip, () => {
+            console.log(`Login Server listening on ${config.servers.login.bind_ip}:${config.servers.login.port}`);
         });
 
         // Start the game server (initially inactive, to be activated upon successful login)
-        this.gameServer.listen(config.servers.server1.port, config.servers.server1.ip, () => {
-            console.log(`Game Server listening on ${config.servers.server1.ip}:${config.servers.server1.port}`);
+        this.gameServer.listen(config.servers.server1.port, config.servers.server1.bind_ip, () => {
+            console.log(`Game Server listening on ${config.servers.server1.bind_ip}:${config.servers.server1.port}`);
         });
     }
 
