@@ -9,13 +9,13 @@ const config = {
     servers: {
         login: {
             bind_ip: '0.0.0.0',
-            ip: 'server.eclipse.oldcp.biz',
+            ip: '143.198.31.133',
             port: '6112',
             name: 'Login Server'
         },
         server1: {
             bind_ip: '0.0.0.0',
-            ip: 'server.eclipse.oldcp.biz',
+            ip: '143.198.31.133',
             port: '6113',
             name: 'Elite Land'
         }
