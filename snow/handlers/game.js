@@ -51,6 +51,10 @@ class Game {
     getRoom(roomId) {
         return this.#rooms.get(Number(roomId));
     }
+    
+    getRooms() {
+        return this.#rooms;
+    }
 
     addClient(client) {
         this.#clients.set(client.data.id, client);
@@ -101,10 +105,10 @@ class Game {
         }
     }
 
-    createRoom(id) {
-        this.#rooms.set(Number(id), new Room({
+    createIglooRoom(id) {
+        this.#rooms.set(id, new Room({
             id: id,
-            name: "igloo:" + id,
+            name: `Igloo ${id - 1000}`,
             game: false
         }));
     }

@@ -46,6 +46,8 @@ class Room {
             const playerStrings = Array.from(this.#clients.values())
                 .map(client => client.getPlayerString());
 
+            playerStrings.push("0|OG Bro|1|14|413|442|0|0|0|0|0|0|380|300|0|1|999");
+
             // Add client to room
             this.#clients.set(clientId, client);
 

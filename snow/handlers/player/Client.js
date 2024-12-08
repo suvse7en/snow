@@ -61,9 +61,9 @@ class Client {
         //}
         
         const room = this.#gameInstance.getRoom(roomId);
-    
-        if(!room) return;
         
+        if(!room) return;
+        console.log('Join room id: ' + roomId);
         this.leaveRoom();
         this.#currentRoom = room;
         this.x = x;

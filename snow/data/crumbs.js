@@ -902,6 +902,7 @@ const crumbs = {
     4290: { type: "BODY", cost: 100, is_member: true },
     4291: { type: "BODY", cost: 100, is_member: true },
     4999: { type: "BODY", cost: 0, is_member: true },
+    5000: { type: "BODY", cost: 0, is_member: true},
     220: { type: "HAND", cost: 260, is_member: true },
     233: { type: "HAND", cost: 550, is_member: true },
     234: { type: "HAND", cost: 500, is_member: true },
@@ -918,8 +919,7 @@ const crumbs = {
     331: { type: "HAND", cost: 0, is_member: false },
     332: { type: "HAND", cost: 150, is_member: true },
     333: { type: "HAND", cost: 120, is_member: true },
-    334: {
-        type: "HAND", cost: 170, is_member: true },
+    334: { type: "HAND", cost: 170, is_member: true },
     335: { type: "HAND", cost: 0, is_member: false },
     336: { type: "HAND", cost: 0, is_member: false },
     337: { type: "HAND", cost: 0, is_member: false },
