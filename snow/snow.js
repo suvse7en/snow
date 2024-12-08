@@ -30,7 +30,7 @@ database.stderr.on('data', (data) => {
 });
 
 // Start register.js
-const register = exec('node Register.js');
+const register = exec('node register.js');
 register.stdout.on('data', (data) => {
   console.log(`${data}`);
 });
