@@ -4,8 +4,8 @@ const mysql = require('mysql2/promise'); // Use 'promise' variant for Promises
 const db = mysql.createPool({
   host: 'localhost',
   user: 'node',
-  password: '', // Update with your DB password
-  database: 'mojito' // Update with your DB name
+  password: 'mojito', // Update with your DB password
+  database: 'eclipse' // Update with your DB name
 });
 
 // Function to get the number of rows from a query
